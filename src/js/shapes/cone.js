@@ -1,10 +1,10 @@
-import { Mesh, ConeGeometry, MeshNormalMaterial } from "three";
+import { Mesh, ConeGeometry, MeshStandardMaterial, Color } from "three";
 
 const createCone = () => {
   return new Mesh(
     new ConeGeometry(0.25, 1, 30, 30),
-    new MeshNormalMaterial({
-      wireframe: true,
+    new MeshStandardMaterial({
+      color: new Color(0xdddddd),
     })
   );
 };

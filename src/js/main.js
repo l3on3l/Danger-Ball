@@ -2,6 +2,7 @@
 import renderer from "./core/renderer";
 import camera from "./core/camera";
 import scene from "./core/scene";
+import directionalLight from "./core/light";
 //shapes
 import sphere from "./shapes/sphere";
 import createCone from "./shapes/cone";
@@ -13,13 +14,9 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // Global values
-const dist = 1.5; // radius + half of mesh height
+const dist = 1.4; // radius + half of mesh height - 0.1
 let cones = []; // to save the spikes
 let isIncrement = true; // when to incement the size of spikes for animation
-
-// add wrap the the scene
-const wrap = createWrap(sphere);
-scene.add(wrap);
 
 // add spike (helper)
 function addSpike(index, lat, long) {
@@ -40,7 +37,8 @@ function initSpikeBall() {
 
 // handle spike hight
 function handleSpikeScale(index, childName) {
-  const newDist = sphere.geometry.parameters.radius + cones[index].scale.z / 2;
+  const newDist =
+    sphere.geometry.parameters.radius + cones[index].scale.z / 2 - 0.1;
   const childWrap = wrap.getObjectByName("objwrap_" + childName);
   setObjToLatLong(
     wrap,
@@ -132,6 +130,10 @@ spikeNumberFolder.open();
 spikeNumberFolder.add(options, "spikeNumberIncrement").name("increment");
 spikeNumberFolder.add(options, "spikeNumberDecrement").name("decrement");
 
+// add wrap the the scene and light directional
+const wrap = createWrap(sphere);
+scene.add(wrap);
+scene.add(directionalLight);
 //init spikes
 initSpikeBall();
 
