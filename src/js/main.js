@@ -15,6 +15,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // Global values
 const dist = 1.5; // radius + half of mesh height
 let cones = []; // to save the spikes
+let isIncrement = true; // when to incement the size of spikes for animation
 
 // add wrap the the scene
 const wrap = createWrap(sphere);
@@ -50,27 +51,60 @@ function handleSpikeScale(index, childName) {
   );
 }
 
+//increment the size of the spikes
+function spikeIncrement(animate = false) {
+  if (cones.length == 0) {
+    return;
+  }
+
+  for (let i = 0; i < cones.length; i++) {
+    if (cones[i].scale.z >= 0 && cones[i].scale.z <= 2) {
+      cones[i].scale.z += 0.1;
+      handleSpikeScale(i, "cone" + String(i));
+    } else {
+      if (animate) {
+        isIncrement = !isIncrement;
+      }
+      break;
+    }
+  }
+}
+
+//decrement the size of the spikes
+function spikeDecrement(animate = false) {
+  if (cones.length == 0) {
+    return;
+  }
+
+  for (let i = 0; i < cones.length; i++) {
+    if (!parseFloat(cones[i].scale.z.toFixed(2)) <= 0.1) {
+      cones[i].scale.z -= 0.1;
+      handleSpikeScale(i, "cone" + String(i));
+    } else {
+      if (animate) {
+        isIncrement = !isIncrement;
+      }
+      break;
+    }
+  }
+}
+
+// keyframe animation for spikes
+function animateSpike() {
+  if (isIncrement) {
+    spikeIncrement(true);
+  } else {
+    spikeDecrement(true);
+  }
+}
+
 // GUI options
 const options = {
   spikeLengthIncrement: function () {
-    for (let i = 0; i < cones.length; i++) {
-      if (cones[i].scale.z >= 1 || cones[i].scale.z <= 2) {
-        cones[i].scale.z += 0.1;
-        handleSpikeScale(i, "cone" + String(i));
-      } else {
-        break;
-      }
-    }
+    spikeIncrement();
   },
   spikeLengthDecrement: function () {
-    for (let i = 0; i < cones.length; i++) {
-      if (!cones[i].scale.z <= 0.1) {
-        cones[i].scale.z -= 0.1;
-        handleSpikeScale(i, "cone" + String(i));
-      } else {
-        break;
-      }
-    }
+    spikeDecrement();
   },
   spikeNumberIncrement: function () {
     const latRand = (Math.floor(Math.random() * 10) + 1) / 10;
@@ -117,6 +151,7 @@ function render() {
     // render whole group
     wrap.position.x = 1 - 2 * bias;
     wrap.position.z = Math.sin(Math.PI * 2 * bias) * 2;
+    animateSpike();
     renderer.render(scene, camera);
     // update
     frame += fps * secs;
