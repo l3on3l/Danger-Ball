@@ -29,8 +29,8 @@ function addSpike(index, lat, long) {
 // initialize the cone objects(spikes)
 function initSpikeBall() {
   let aux = 0.0;
-  for (let i = 0; i < 6; i++) {
-    addSpike(i, 1 + aux, 1 + aux);
+  for (let i = 0; i < params.total; i++) {
+    addSpike(i, params.size + aux, params.size + aux);
     aux += 0.2;
   }
 }
@@ -49,33 +49,24 @@ function handleSpikeScale(index, childName) {
   );
 }
 
-//increment the size of the spikes
-function spikeIncrement(animate = false) {
+//increment the size of the spikes (for animation)
+function spikeIncrement() {
   if (cones.length == 0) {
     return;
   }
 
   for (let i = 0; i < cones.length; i++) {
-    if (cones[i].scale.z >= 0 && cones[i].scale.z <= 2) {
-      if (animate && cones[i].scale.z > currentSpikeSize) {
-        isIncrement = !isIncrement;
-        break;
-      }
-      cones[i].scale.z += 0.1;
-      handleSpikeScale(i, "cone" + String(i));
+    if (cones[i].scale.z > params.size) {
+      isIncrement = !isIncrement;
+      break;
     }
-  }
-
-  // update currentSpikeSize value by GUI
-  if (!animate) {
-    if (cones[0].scale.z >= 0 && cones[0].scale.z <= 2) {
-      currentSpikeSize += 0.1;
-    }
+    cones[i].scale.z += 0.1;
+    handleSpikeScale(i, "cone" + String(i));
   }
 }
 
-//decrement the size of the spikes
-function spikeDecrement(animate = false) {
+//decrement the size of the spikes (for animation)
+function spikeDecrement() {
   if (cones.length == 0) {
     return;
   }
@@ -85,17 +76,8 @@ function spikeDecrement(animate = false) {
       cones[i].scale.z -= 0.1;
       handleSpikeScale(i, "cone" + String(i));
     } else {
-      if (animate) {
-        isIncrement = !isIncrement;
-      }
+      isIncrement = !isIncrement;
       break;
-    }
-  }
-
-  // update currentSpikeSize value by GUI
-  if (!animate) {
-    if (parseFloat(currentSpikeSize.toFixed(2)) >= 0.1) {
-      currentSpikeSize -= 0.1;
     }
   }
 }
@@ -103,9 +85,9 @@ function spikeDecrement(animate = false) {
 // keyframe animation for spikes
 function animateSpike() {
   if (isIncrement) {
-    spikeIncrement(true);
+    spikeIncrement();
   } else {
-    spikeDecrement(true);
+    spikeDecrement();
   }
 }
 
@@ -115,41 +97,68 @@ function getRandomFloat(min, max, decimals) {
   return parseFloat(str);
 }
 
-// GUI options
-const options = {
-  spikeLengthIncrement: function () {
-    spikeIncrement();
-  },
-  spikeLengthDecrement: function () {
-    spikeDecrement();
-  },
-  spikeNumberIncrement: function () {
-    if (cones.length <= 25) {
+// push/pop 'n' spikes
+function handlePushPopSpike(n) {
+  if (n > cones.length) {
+    // push spikes
+    const total = n - cones.length;
+    for (let i = 0; i < total; i++) {
       const latRand = getRandomFloat(0.1, 1, 4);
       const longRand = getRandomFloat(0.1, 1, 4);
       addSpike(cones.length, latRand, longRand);
       cones[cones.length - 1].scale.z = cones[0].scale.z;
       handleSpikeScale(cones.length - 1, "cone" + String(cones.length - 1));
     }
-  },
-  spikeNumberDecrement: function () {
-    if (cones.length > 0) {
-      wrap.userData.surface.children.pop();
-      cones.pop();
+  } else if (n < cones.length) {
+    // remove spikes
+    const total = cones.length - n;
+    for (let i = 0; i < total; i++) {
+      if (cones.length > 0) {
+        wrap.userData.surface.children.pop();
+        cones.pop();
+      }
     }
-  },
-};
+  }
+}
 
-// makeInstance GUI folder
-const gui = new GUI();
-const spikeLenghtFolder = gui.addFolder("Spike lengths");
-spikeLenghtFolder.open();
-spikeLenghtFolder.add(options, "spikeLengthIncrement").name("increment");
-spikeLenghtFolder.add(options, "spikeLengthDecrement").name("decrement");
-const spikeNumberFolder = gui.addFolder("Spike numbers");
-spikeNumberFolder.open();
-spikeNumberFolder.add(options, "spikeNumberIncrement").name("increment");
-spikeNumberFolder.add(options, "spikeNumberDecrement").name("decrement");
+// add GUI & options
+let gui = new GUI();
+class Params {
+  constructor() {
+    // spike
+    this.animate = true;
+    this.total = 6;
+    this.size = 1;
+    // render
+    this.fps = 30;
+  }
+}
+// add GUI folder
+const params = new Params();
+const spikeFolder = gui.addFolder("Spikes");
+spikeFolder.add(params, "animate").listen();
+spikeFolder
+  .add(params, "total", 0, 20, 1)
+  .listen()
+  .onChange(function () {
+    handlePushPopSpike(params.total);
+  });
+spikeFolder
+  .add(params, "size", 0, 2, 0.1)
+  .listen()
+  .onChange(function () {
+    if (cones.length == 0) {
+      return;
+    }
+    // add new size for the spikes
+    for (let i = 0; i < cones.length; i++) {
+      cones[i].scale.z = params.size;
+      handleSpikeScale(i, "cone" + String(i));
+    }
+  });
+
+const renderFolder = gui.addFolder("Render");
+renderFolder.add(params, "fps", 10, 60, 10).listen();
 
 // add wrap the the scene and light directional
 const wrap = createWrap(sphere);
@@ -157,12 +166,11 @@ scene.add(wrap);
 scene.add(directionalLight);
 //init spikes
 initSpikeBall();
-let currentSpikeSize = cones[0].scale.z;
 
 // render
 let frame = 0;
 const maxFrame = 400;
-const fps = 30;
+// const fps = 30;
 let fpsClock = new Date();
 
 function render() {
@@ -171,14 +179,16 @@ function render() {
   const bias = 1 - Math.abs(per - 0.5) / 0.5;
   const secs = (now - fpsClock) / 1000;
   requestAnimationFrame(render);
-  if (secs > 1 / fps) {
+  if (secs > 1 / params.fps) {
     // render whole group
     wrap.position.x = 1 - 2 * bias;
     wrap.position.z = Math.sin(Math.PI * 2 * bias) * 2;
-    animateSpike();
+    if (params.animate) {
+      animateSpike();
+    }
     renderer.render(scene, camera);
     // update
-    frame += fps * secs;
+    frame += params.fps * secs;
     frame %= maxFrame;
     fpsClock = now;
   }
