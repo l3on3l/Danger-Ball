@@ -109,6 +109,12 @@ function animateSpike() {
   }
 }
 
+// returns a random float in a range
+function getRandomFloat(min, max, decimals) {
+  const str = (Math.random() * (max - min) + min).toFixed(decimals);
+  return parseFloat(str);
+}
+
 // GUI options
 const options = {
   spikeLengthIncrement: function () {
@@ -118,11 +124,13 @@ const options = {
     spikeDecrement();
   },
   spikeNumberIncrement: function () {
-    const latRand = (Math.floor(Math.random() * 10) + 1) / 10;
-    const longRand = (Math.floor(Math.random() * 10) + 1) / 10;
-    addSpike(cones.length, latRand, longRand);
-    cones[cones.length - 1].scale.z = cones[0].scale.z;
-    handleSpikeScale(cones.length - 1, "cone" + String(cones.length - 1));
+    if (cones.length <= 25) {
+      const latRand = getRandomFloat(0.1, 1, 4);
+      const longRand = getRandomFloat(0.1, 1, 4);
+      addSpike(cones.length, latRand, longRand);
+      cones[cones.length - 1].scale.z = cones[0].scale.z;
+      handleSpikeScale(cones.length - 1, "cone" + String(cones.length - 1));
+    }
   },
   spikeNumberDecrement: function () {
     if (cones.length > 0) {
