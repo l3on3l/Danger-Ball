@@ -15,7 +15,6 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // Global values
 const dist = 1.5; // radius + half of mesh height
 let cones = []; // to save the spikes
-let totalSpikes = 6; // total current spikes
 
 // add wrap the the scene
 const wrap = createWrap(sphere);
@@ -32,43 +31,57 @@ function addSpike(index, lat, long) {
 // initialize the cone objects(spikes)
 function initSpikeBall() {
   let aux = 0.0;
-  for (let i = 0; i < totalSpikes; i++) {
+  for (let i = 0; i < 6; i++) {
     addSpike(i, 1 + aux, 1 + aux);
     aux += 0.2;
   }
 }
 
+// handle spike hight
+function handleSpikeScale(index, childName) {
+  const newDist = sphere.geometry.parameters.radius + cones[index].scale.z / 2;
+  const childWrap = wrap.getObjectByName("objwrap_" + childName);
+  setObjToLatLong(
+    wrap,
+    childName,
+    childWrap.userData.latPer,
+    childWrap.userData.longPer,
+    newDist
+  );
+}
+
 // GUI options
 const options = {
   spikeLengthIncrement: function () {
-    // console.log(cones[0].geometry.parameters);
-    for (let i = 0; i < totalSpikes; i++) {
+    for (let i = 0; i < cones.length; i++) {
       if (cones[i].scale.z >= 1 || cones[i].scale.z <= 2) {
         cones[i].scale.z += 0.1;
+        handleSpikeScale(i, "cone" + String(i));
       } else {
         break;
       }
     }
   },
   spikeLengthDecrement: function () {
-    for (let i = 0; i < totalSpikes; i++) {
-      if (cones[i].scale.z == 1) {
-        break;
-      } else {
+    for (let i = 0; i < cones.length; i++) {
+      if (!cones[i].scale.z <= 0.1) {
         cones[i].scale.z -= 0.1;
+        handleSpikeScale(i, "cone" + String(i));
+      } else {
+        break;
       }
     }
   },
   spikeNumberIncrement: function () {
     const latRand = (Math.floor(Math.random() * 10) + 1) / 10;
     const longRand = (Math.floor(Math.random() * 10) + 1) / 10;
-    addSpike(totalSpikes, latRand, longRand);
-    totalSpikes++;
+    addSpike(cones.length, latRand, longRand);
+    cones[cones.length - 1].scale.z = cones[0].scale.z;
+    handleSpikeScale(cones.length - 1, "cone" + String(cones.length - 1));
   },
   spikeNumberDecrement: function () {
-    if (totalSpikes > 0) {
+    if (cones.length > 0) {
       wrap.userData.surface.children.pop();
-      totalSpikes--;
       cones.pop();
     }
   },

@@ -1,5 +1,10 @@
-// https://github.com/dustinpfister/test_threejs/blob/master/views/forpost/threejs-examples-position-things-to-sphere-surface/r0/js/sphere_wrap.js
-// author: dustinpfister
+/* 
+  Url: https://github.com/dustinpfister/test_threejs/blob/master/views/forpost/threejs-examples-position-things-to-sphere-surface/r0/js/sphere_wrap.js
+  author: dustinpfister
+  This code used as a guide to create a module that helps with the process of positioning an object to the surface of a sphere.
+  There was little modification in the code for its use
+*/
+
 import { Vector3, Group } from "three";
 
 // create wrap method
@@ -17,9 +22,11 @@ export function createWrap(objSphere) {
 }
 // set to lat and long helper
 export function setObjToLatLong(wrap, childName, latPer, longPer, dist) {
-  //   console.log(wrap.getObjectByName("objwrap_" + childName));
+  // get child
   const childWrap = wrap.getObjectByName("objwrap_" + childName);
-  const child = childWrap.children[0]; //wrap.getObjectByName(childName),
+  const child = childWrap.children[0];
+  childWrap.userData.latPer = latPer;
+  childWrap.userData.longPer = longPer;
   // set lat
   const radian = Math.PI * -0.5 + Math.PI * latPer,
     x = Math.cos(radian) * dist,
