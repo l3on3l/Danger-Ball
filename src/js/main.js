@@ -57,13 +57,19 @@ function spikeIncrement(animate = false) {
 
   for (let i = 0; i < cones.length; i++) {
     if (cones[i].scale.z >= 0 && cones[i].scale.z <= 2) {
+      if (animate && cones[i].scale.z > currentSpikeSize) {
+        isIncrement = !isIncrement;
+        break;
+      }
       cones[i].scale.z += 0.1;
       handleSpikeScale(i, "cone" + String(i));
-    } else {
-      if (animate) {
-        isIncrement = !isIncrement;
-      }
-      break;
+    }
+  }
+
+  // update currentSpikeSize value by GUI
+  if (!animate) {
+    if (cones[0].scale.z >= 0 && cones[0].scale.z <= 2) {
+      currentSpikeSize += 0.1;
     }
   }
 }
@@ -75,7 +81,7 @@ function spikeDecrement(animate = false) {
   }
 
   for (let i = 0; i < cones.length; i++) {
-    if (!parseFloat(cones[i].scale.z.toFixed(2)) <= 0.1) {
+    if (parseFloat(cones[i].scale.z.toFixed(2)) >= 0.1) {
       cones[i].scale.z -= 0.1;
       handleSpikeScale(i, "cone" + String(i));
     } else {
@@ -83,6 +89,13 @@ function spikeDecrement(animate = false) {
         isIncrement = !isIncrement;
       }
       break;
+    }
+  }
+
+  // update currentSpikeSize value by GUI
+  if (!animate) {
+    if (parseFloat(currentSpikeSize.toFixed(2)) >= 0.1) {
+      currentSpikeSize -= 0.1;
     }
   }
 }
@@ -136,6 +149,7 @@ scene.add(wrap);
 scene.add(directionalLight);
 //init spikes
 initSpikeBall();
+let currentSpikeSize = cones[0].scale.z;
 
 // render
 let frame = 0;
