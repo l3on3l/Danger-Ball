@@ -130,7 +130,7 @@ class Params {
     this.total = 6;
     this.size = 1;
     // render
-    this.fps = 30;
+    this.fps = 40;
   }
 }
 // add GUI folder
@@ -169,11 +169,10 @@ initSpikeBall();
 
 // render
 let frame = 0;
-const maxFrame = 400;
-// const fps = 30;
+const maxFrame = 600;
 let fpsClock = new Date();
 
-function render() {
+function render(time) {
   const now = new Date();
   const per = frame / maxFrame;
   const bias = 1 - Math.abs(per - 0.5) / 0.5;
@@ -183,9 +182,12 @@ function render() {
     // render whole group
     wrap.position.x = 1 - 2 * bias;
     wrap.position.z = Math.sin(Math.PI * 2 * bias) * 2;
+    wrap.rotation.x = time / 1000;
+    wrap.rotation.y = time / 1000;
     if (params.animate) {
       animateSpike();
     }
+    controls.update();
     renderer.render(scene, camera);
     // update
     frame += params.fps * secs;
@@ -193,4 +195,5 @@ function render() {
     fpsClock = now;
   }
 }
-render();
+renderer.setAnimationLoop((t) => render(t));
+// render();
