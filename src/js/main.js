@@ -19,9 +19,12 @@ let cones = []; // to save the spikes
 let isIncrement = true; // when to incement the size of spikes for animation
 
 // add spike (helper)
-function addSpike(index, lat, long) {
+function addSpike(index, lat, long, color = null) {
   cones.push(createCone());
   cones[index].geometry.rotateX(Math.PI * 1.5);
+  if (color != null) {
+    cones[index].material.color.set(color);
+  }
   addObjectToWrap(wrap, "cone" + String(index), cones[index]);
   setObjToLatLong(wrap, "cone" + String(index), lat, long, dist);
 }
@@ -98,14 +101,14 @@ function getRandomFloat(min, max, decimals) {
 }
 
 // push/pop 'n' spikes
-function handlePushPopSpike(n) {
+function handlePushPopSpike(n, color = null) {
   if (n > cones.length) {
     // push spikes
     const total = n - cones.length;
     for (let i = 0; i < total; i++) {
       const latRand = getRandomFloat(0.1, 1, 4);
       const longRand = getRandomFloat(0.1, 1, 4);
-      addSpike(cones.length, latRand, longRand);
+      addSpike(cones.length, latRand, longRand, color);
       cones[cones.length - 1].scale.z = cones[0].scale.z;
       handleSpikeScale(cones.length - 1, "cone" + String(cones.length - 1));
     }
@@ -126,22 +129,28 @@ let gui = new GUI();
 class Params {
   constructor() {
     // spike
-    this.animate = true;
+    this.spikeAnimate = true;
     this.total = 6;
     this.size = 1;
+    this.spikeColor = "0xdddddd";
+    //sphere
+    this.sphereColor = sphere.material.color.getHex();
+    this.sphereAnimate = true;
     // render
     this.fps = 40;
   }
 }
-// add GUI folder
+
 const params = new Params();
+
+// add GUI spike folder
 const spikeFolder = gui.addFolder("Spikes");
-spikeFolder.add(params, "animate").listen();
+spikeFolder.add(params, "spikeAnimate").name("animate").listen();
 spikeFolder
   .add(params, "total", 0, 20, 1)
   .listen()
   .onChange(function () {
-    handlePushPopSpike(params.total);
+    handlePushPopSpike(params.total, params.spikeColor);
   });
 spikeFolder
   .add(params, "size", 0, 2, 0.1)
@@ -156,7 +165,27 @@ spikeFolder
       handleSpikeScale(i, "cone" + String(i));
     }
   });
-
+spikeFolder
+  .addColor(params, "spikeColor")
+  .name("color")
+  .onChange(function (value) {
+    if (cones.length == 0) {
+      return;
+    }
+    cones.forEach((cone) => {
+      cone.material.color.set(value);
+    });
+  });
+// add GUI sphere folder
+const sphereFolder = gui.addFolder("Sphere");
+sphereFolder.add(params, "sphereAnimate").name("animate").listen();
+sphereFolder
+  .addColor(params, "sphereColor")
+  .name("color")
+  .onChange(function (value) {
+    sphere.material.color.set(value);
+  });
+// add GUI render folder
 const renderFolder = gui.addFolder("Render");
 renderFolder.add(params, "fps", 10, 60, 10).listen();
 
@@ -180,11 +209,13 @@ function render(time) {
   requestAnimationFrame(render);
   if (secs > 1 / params.fps) {
     // render whole group
-    wrap.position.x = 1 - 2 * bias;
-    wrap.position.z = Math.sin(Math.PI * 2 * bias) * 2;
-    wrap.rotation.x = time / 1000;
-    wrap.rotation.y = time / 1000;
-    if (params.animate) {
+    if (params.sphereAnimate) {
+      wrap.position.x = 1 - 2 * bias;
+      wrap.position.z = Math.sin(Math.PI * 2 * bias) * 2;
+      wrap.rotation.x = time / 1000;
+      wrap.rotation.y = time / 1000;
+    }
+    if (params.spikeAnimate) {
       animateSpike();
     }
     controls.update();
